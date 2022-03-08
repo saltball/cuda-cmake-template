@@ -1,12 +1,10 @@
-/*
- *hello_world.cu
- */
-#include <stdio.h>
-#include "common.hpp"
-
+#ifndef HELLO_HPP
+#define HELLO_HPP
+#include <cuda_runtime.h>
+#include "common.h"
 __global__ void hello_world(void)
 {
-  // printf("GPU: Hello world from thread %d of total grid %d, block %d of total blocks %d\n", threadIdx.x, gridDim.x, blockIdx.x, blockDim.x);
+  printf("GPU: Hello world from thread %d of total grid %d, block %d of total blocks %d\n", threadIdx.x, gridDim.x, blockIdx.x, blockDim.x);
 }
 int hello()
 {
@@ -19,3 +17,4 @@ int hello()
   printf("CPU: Time taken: %f\n", end_t - start_t);
   return 0;
 }
+#endif // HELLO_HPP

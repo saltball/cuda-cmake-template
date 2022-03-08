@@ -35,6 +35,7 @@ endif()
 # set output path
 set(PROJECT_OUTPUT_DIR ${PROJECT_BINARY_DIR}/${CMAKE_SYSTEM_PROCESSOR})
 set(PROJECT_INCLUDE_DIR ${PROJECT_OUTPUT_DIR}/include)
+set(PROJECT_SROUCE_DIR ${PROJECT_OUTPUT_DIR}/src)
 
 # mkdir directory
 file(MAKE_DIRECTORY ${PROJECT_INCLUDE_DIR})
@@ -71,19 +72,42 @@ string(APPEND CMAKE_CUDA_FLAGS " -Xfatbin -compress-all")
 
 # set the source files
 set(ROOT_HEADER_DIRS ${PROJECT_SOURCE_DIR}/include)
-set(QC_ROOT_DIRS ${PROJECT_SOURCE_DIR}/src)
+set(ROOT_SROUCE_DIRS ${PROJECT_SOURCE_DIR}/src)
 
-add_subdirectory(src)
+# set submodules
+set(QC_MODULE_NAME_LIST common op)
 
-# target_include_directories(${PROJECT_NAME} PRIVATE ${PRJ_INCLUDE_DIRS})
+# every module has its own directory
+foreach(module ${QC_MODULE_NAME_LIST})
+  file(GLOB ${module}_header_files "${ROOT_SROUCE_DIRS}/${module}/*.h")
+  file(GLOB ${module}_src_files "${ROOT_SROUCE_DIRS}/${module}/*.cpp")
+  file(GLOB ${module}_cu_src_files "${ROOT_SROUCE_DIRS}/${module}/*.cu")
+  add_library(${module} INTERFACE ${${module}_src_files}
+              ${${module}_cu_src_files} ${${module}_header_files})
+  set_target_properties(
+    ${module}
+    PROPERTIES POSITION_INDEPENDENT_CODE ON
+               CUDA_SEPARABLE_COMPILATION ON
+               LINKER_LANGUAGE CUDA)
+endforeach()
 
-# target_compile_options(${PROJECT_NAME} PRIVATE ${PRJ_COMPILE_OPTIONS})
+# main module
+file(GLOB main_header_files "${ROOT_SROUCE_DIRS}/main/*.h")
+file(GLOB main_src_files "${ROOT_SROUCE_DIRS}/main/*.cpp")
+file(GLOB main_cu_src_files "${ROOT_SROUCE_DIRS}/main/*.cu")
+add_executable(qc ${main_src_files} ${main_cu_src_files} ${main_header_files})
+set_target_properties(qc PROPERTIES POSITION_INDEPENDENT_CODE ON
+                                    CUDA_SEPARABLE_COMPILATION ON)
+foreach(module ${QC_MODULE_NAME_LIST})
+  target_link_libraries(qc PRIVATE ${module})
+  target_include_directories(qc PRIVATE ${ROOT_SROUCE_DIRS}/${module})
+endforeach()
 
-# target_compile_features(${PROJECT_NAME} PUBLIC ${PRJ_COMPILE_FEATURES})
+message(STATUS "Will using the following modules: ")
+foreach(module ${QC_MODULE_NAME_LIST})
+  message(STATUS "  ${module}")
+endforeach()
 
-# target_link_libraries(${PROJECT_NAME} PRIVATE ${PRJ_LIBRARIES})
-
-# transfer all global headers to the include directory
 foreach(include ${ROOT_HEADER_FILES})
   message("-- Copying ${include} to ${PROJECT_INCLUDE_DIR}")
   configure_file(${include} ${PROJECT_INCLUDE_DIR} COPYONLY)

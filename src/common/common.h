@@ -1,4 +1,20 @@
-#include "common.hpp"
+#ifndef QC_COMMON_HPP
+#define QC_COMMON_HPP
+
+#include <stdio.h>
+#include <math.h>
+
+#define CHECK(call)                                                    \
+  {                                                                    \
+    const cudaError_t error = call;                                    \
+    if (error != cudaSuccess)                                          \
+    {                                                                  \
+      printf("ERROR: %s:%d,", __FILE__, __LINE__);                     \
+      printf("code:%d,reason:%s\n", error, cudaGetErrorString(error)); \
+      exit(1);                                                         \
+    }                                                                  \
+  }
+
 #include <time.h>
 #ifdef _WIN32
 #include <windows.h>
@@ -86,3 +102,4 @@ void checkResult(float *hostRef, float *gpuRef, const int N)
   }
   printf("Check result success!\n");
 }
+#endif // QC_COMMON_HPP
