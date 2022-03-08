@@ -82,25 +82,29 @@ foreach(module ${QC_MODULE_NAME_LIST})
   file(GLOB ${module}_header_files "${ROOT_SROUCE_DIRS}/${module}/*.h")
   file(GLOB ${module}_src_files "${ROOT_SROUCE_DIRS}/${module}/*.cpp")
   file(GLOB ${module}_cu_src_files "${ROOT_SROUCE_DIRS}/${module}/*.cu")
-  add_library(${module} INTERFACE ${${module}_src_files}
+  add_library(${module} STATIC ${${module}_src_files}
               ${${module}_cu_src_files} ${${module}_header_files})
   set_target_properties(
     ${module}
     PROPERTIES POSITION_INDEPENDENT_CODE ON
                CUDA_SEPARABLE_COMPILATION ON
                LINKER_LANGUAGE CUDA)
+  target_include_directories(${module} PUBLIC ${ROOT_HEADER_DIRS} ${ROOT_SROUCE_DIRS}/${module})
 endforeach()
 
 # main module
 file(GLOB main_header_files "${ROOT_SROUCE_DIRS}/main/*.h")
 file(GLOB main_src_files "${ROOT_SROUCE_DIRS}/main/*.cpp")
 file(GLOB main_cu_src_files "${ROOT_SROUCE_DIRS}/main/*.cu")
-add_executable(qc ${main_src_files} ${main_cu_src_files} ${main_header_files})
-set_target_properties(qc PROPERTIES POSITION_INDEPENDENT_CODE ON
+add_executable(qc_cuda ${main_cu_src_files} ${main_header_files})
+set_target_properties(qc_cuda PROPERTIES POSITION_INDEPENDENT_CODE ON
                                     CUDA_SEPARABLE_COMPILATION ON)
+add_executable(qc ${main_src_files} ${main_header_files})
 foreach(module ${QC_MODULE_NAME_LIST})
   target_link_libraries(qc PRIVATE ${module})
-  target_include_directories(qc PRIVATE ${ROOT_SROUCE_DIRS}/${module})
+  target_link_libraries(qc_cuda PRIVATE ${module})
+  target_include_directories(qc PRIVATE ${ROOT_HEADER_DIRS})
+  target_include_directories(qc_cuda PRIVATE ${ROOT_HEADER_DIRS})
 endforeach()
 
 message(STATUS "Will using the following modules: ")
