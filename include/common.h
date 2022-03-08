@@ -28,7 +28,8 @@ double cpuSecond();
 void initialData(float *ip, int size);
 void initialData_int(int *ip, int size);
 void printMatrix(float *C, const int nx, const int ny);
-
+#ifdef __CUDACC__
 void initDevice(int devNum);
 void checkResult(float *hostRef, float *gpuRef, const int N);
+#endif
 #endif // QC_COMMON_HPP
