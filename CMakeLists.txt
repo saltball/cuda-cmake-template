@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(openacc_prj LANGUAGES CXX)
+project(openacc_prj LANGUAGES CXX CUDA)
 
 option(DISABLED_CUDA "Disable CUDA" OFF)
 
@@ -11,8 +11,16 @@ set(PRJ_INCLUDE_DIRS)
 set(PRJ_COMPILE_OPTIONS)
 set(PRJ_COMPILE_FEATURES)
 
-include("cmake/AutoDetectCudaArch.cmake")
+# Select CUDA arch, by
+# https://stackoverflow.com/questions/68223398/how-can-i-get-cmake-to-automatically-detect-the-value-for-cuda-architectures
+include(FindCUDA/select_compute_arch)
+cuda_detect_installed_gpus(INSTALLED_GPU_CCS_1)
+string(STRIP "${INSTALLED_GPU_CCS_1}" INSTALLED_GPU_CCS_2)
+string(REPLACE " " ";" INSTALLED_GPU_CCS_3 "${INSTALLED_GPU_CCS_2}")
+string(REPLACE "." "" CUDA_ARCH_LIST "${INSTALLED_GPU_CCS_3}")
+set(CMAKE_CUDA_ARCHITECTURES ${CUDA_ARCH_LIST})
 
+# Global CUDA
 if(NOT DISABLED_CUDA)
   enable_language(CUDA)
 endif()
@@ -38,50 +46,45 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_OUTPUT_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_OUTPUT_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_OUTPUT_DIR}/lib)
 
+# set C and CXX flags, refer to pytorch
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_C_STANDARD 11)
+
+if(NOT MSVC)
+  string(APPEND CMAKE_CXX_FLAGS " -O2 -fPIC")
+  string(APPEND CMAKE_CXX_FLAGS " -Wall")
+  string(APPEND CMAKE_CXX_FLAGS " -Werror")
+else()
+  string(APPEND CMAKE_CXX_FLAGS " /O2")
+  # string(APPEND CMAKE_CXX_FLAGS " /Wall")
+endif()
+
+# set CUDA flags, refer to pytorch
+if(MSVC)
+  string(APPEND CMAKE_CUDA_FLAGS " -Xcompiler /W4")
+else()
+  string(APPEND CMAKE_CUDA_FLAGS_DEBUG " -g -lineinfo --source-in-ptx")
+  string(APPEND CMAKE_CUDA_FLAGS_RELWITHDEBINFO " -g -lineinfo --source-in-ptx")
+endif()
+
+string(APPEND CMAKE_CUDA_FLAGS " -Xfatbin -compress-all")
+
 # set the source files
-file(GLOB root_header_files "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
-file(GLOB root_src_files "${CMAKE_CURRENT_SOURCE_DIR}/*.cu")
-file(GLOB root_cu_src_files "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+set(ROOT_HEADER_DIRS ${PROJECT_SOURCE_DIR}/include)
+set(QC_ROOT_DIRS ${PROJECT_SOURCE_DIR}/src)
 
-list(APPEND PRJ_HEADER_LIST ${root_header_files})
-list(APPEND PRJ_SRC_LIST ${root_src_files} ${root_cu_src_files})
-list(APPEND PRJ_INCLUDE_DIRS ${OpenMP_CXX_INCLUDE_DIRS})
-list(APPEND PRJ_COMPILE_FEATURES cxx_std_14)
+add_subdirectory(src)
 
-# CUDA and C++ compiler flags
-set(cxx_flags
-    $<$<CXX_COMPILER_ID:MSVC>:-D_SCL_SECURE_NO_WARNINGS
-    /bigobj
-    /openmp
-    /std:c++11> #< TODO> Add MSVC-specific compiler flags here
-    $<$<CXX_COMPILER_ID:GNU>:-Wall
-    -m64
-    -fopenmp
-    -O3
-    -std=c++11> #< TODO> Add GCC/Clang-specific compiler flags here
-)
-set(CUDA_NVCC_FLAGS
-${CUDA_NVCC_FLAGS};
-    -Xcompiler=$<$<CXX_COMPILER_ID:GNU>:-Wall
-    -fopenmp
-    -O3>
-    -Xcudafe=--display_error_number
-    ${CUDA_ARCHS}
-    -lineinfo
-    --expt-extended-lambda
-    -use_fast_math
-    # -Xptxas -warn-spills -res-usage #-v
-    $<$<CXX_COMPILER_ID:GNU>:-O3>
-    # -G
-)
+# target_include_directories(${PROJECT_NAME} PRIVATE ${PRJ_INCLUDE_DIRS})
 
-#
-add_executable(${PROJECT_NAME} ${PRJ_SRC_LIST} ${PRJ_HEADER_LIST})
+# target_compile_options(${PROJECT_NAME} PRIVATE ${PRJ_COMPILE_OPTIONS})
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${PRJ_INCLUDE_DIRS})
+# target_compile_features(${PROJECT_NAME} PUBLIC ${PRJ_COMPILE_FEATURES})
 
-target_compile_options(${PROJECT_NAME} PRIVATE ${PRJ_COMPILE_OPTIONS})
+# target_link_libraries(${PROJECT_NAME} PRIVATE ${PRJ_LIBRARIES})
 
-target_compile_features(${PROJECT_NAME} PUBLIC ${PRJ_COMPILE_FEATURES})
-
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PRJ_LIBRARIES})
+# transfer all global headers to the include directory
+foreach(include ${ROOT_HEADER_FILES})
+  message("-- Copying ${include} to ${PROJECT_INCLUDE_DIR}")
+  configure_file(${include} ${PROJECT_INCLUDE_DIR} COPYONLY)
+endforeach()
