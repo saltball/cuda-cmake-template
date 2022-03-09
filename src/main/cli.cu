@@ -1,5 +1,5 @@
 #include "op.h"
-int main(int argc)
+int main()
 {
     hello();
     return 0;

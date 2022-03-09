@@ -9,3 +9,4 @@ __global__
     hello_world(void);
 int hello();
 #endif // HELLO_HPP
+

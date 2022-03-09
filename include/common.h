@@ -33,3 +33,4 @@ void initDevice(int devNum);
 void checkResult(float *hostRef, float *gpuRef, const int N);
 #endif
 #endif // QC_COMMON_HPP
+

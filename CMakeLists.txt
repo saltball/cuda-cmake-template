@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(openacc_prj LANGUAGES CXX CUDA)
+project(openacc_prj LANGUAGES CXX)
 
 option(DISABLED_CUDA "Disable CUDA" OFF)
 
@@ -11,18 +11,17 @@ set(PRJ_INCLUDE_DIRS)
 set(PRJ_COMPILE_OPTIONS)
 set(PRJ_COMPILE_FEATURES)
 
-# Select CUDA arch, by
-# https://stackoverflow.com/questions/68223398/how-can-i-get-cmake-to-automatically-detect-the-value-for-cuda-architectures
-include(FindCUDA/select_compute_arch)
-cuda_detect_installed_gpus(INSTALLED_GPU_CCS_1)
-string(STRIP "${INSTALLED_GPU_CCS_1}" INSTALLED_GPU_CCS_2)
-string(REPLACE " " ";" INSTALLED_GPU_CCS_3 "${INSTALLED_GPU_CCS_2}")
-string(REPLACE "." "" CUDA_ARCH_LIST "${INSTALLED_GPU_CCS_3}")
-set(CMAKE_CUDA_ARCHITECTURES ${CUDA_ARCH_LIST})
-
 # Global CUDA
 if(NOT DISABLED_CUDA)
   enable_language(CUDA)
+  # Select CUDA arch, by
+  # https://stackoverflow.com/questions/68223398/how-can-i-get-cmake-to-automatically-detect-the-value-for-cuda-architectures
+  include(FindCUDA/select_compute_arch)
+  cuda_detect_installed_gpus(INSTALLED_GPU_CCS_1)
+  string(STRIP "${INSTALLED_GPU_CCS_1}" INSTALLED_GPU_CCS_2)
+  string(REPLACE " " ";" INSTALLED_GPU_CCS_3 "${INSTALLED_GPU_CCS_2}")
+  string(REPLACE "." "" CUDA_ARCH_LIST "${INSTALLED_GPU_CCS_3}")
+  set(CMAKE_CUDA_ARCHITECTURES ${CUDA_ARCH_LIST})
 endif()
 
 message("-- system arch:  ${CMAKE_SYSTEM_PROCESSOR}")
@@ -79,36 +78,26 @@ set(QC_MODULE_NAME_LIST common op)
 
 # every module has its own directory
 foreach(module ${QC_MODULE_NAME_LIST})
-  file(GLOB ${module}_header_files "${ROOT_SROUCE_DIRS}/${module}/*.h")
-  file(GLOB ${module}_src_files "${ROOT_SROUCE_DIRS}/${module}/*.cpp")
-  file(GLOB ${module}_cu_src_files "${ROOT_SROUCE_DIRS}/${module}/*.cu")
-  add_library(${module}_cu STATIC ${${module}_cu_src_files}
-                                  ${${module}_header_files})
-  add_library(${module} STATIC ${${module}_src_files} ${${module}_header_files})
-  set_target_properties(
-    ${module}_cu
-    PROPERTIES POSITION_INDEPENDENT_CODE ON
-               CUDA_SEPARABLE_COMPILATION ON
-               LINKER_LANGUAGE CUDA)
-  target_include_directories(${module}_cu PUBLIC ${ROOT_HEADER_DIRS}
-                                                 ${ROOT_SROUCE_DIRS}/${module})
-  target_include_directories(${module} PUBLIC ${ROOT_HEADER_DIRS}
-                                              ${ROOT_SROUCE_DIRS}/${module})
+  add_subdirectory(src/${module})
 endforeach()
 
 # main module
 file(GLOB main_header_files "${ROOT_SROUCE_DIRS}/main/*.h")
 file(GLOB main_src_files "${ROOT_SROUCE_DIRS}/main/*.cpp")
-file(GLOB main_cu_src_files "${ROOT_SROUCE_DIRS}/main/*.cu")
-add_executable(qc_cuda ${main_cu_src_files} ${main_header_files})
-set_target_properties(qc_cuda PROPERTIES POSITION_INDEPENDENT_CODE ON
-                                         CUDA_SEPARABLE_COMPILATION ON)
+if(NOT DISABLED_CUDA)
+  file(GLOB main_cu_src_files "${ROOT_SROUCE_DIRS}/main/*.cu")
+  add_executable(qc_cuda ${main_cu_src_files} ${main_header_files})
+  set_target_properties(qc_cuda PROPERTIES POSITION_INDEPENDENT_CODE ON
+                                           CUDA_SEPARABLE_COMPILATION ON)
+endif()
 add_executable(qc ${main_src_files} ${main_header_files})
 foreach(module ${QC_MODULE_NAME_LIST})
   target_link_libraries(qc PUBLIC ${module})
-  target_link_libraries(qc_cuda PUBLIC ${module}_cu)
   target_include_directories(qc PUBLIC ${ROOT_HEADER_DIRS})
-  target_include_directories(qc_cuda PUBLIC ${ROOT_HEADER_DIRS})
+  if(NOT DISABLED_CUDA)
+    target_link_libraries(qc_cuda PUBLIC ${module}_cu)
+    target_include_directories(qc_cuda PUBLIC ${ROOT_HEADER_DIRS})
+  endif()
 endforeach()
 
 message(STATUS "Will using the following modules: ")

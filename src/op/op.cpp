@@ -12,3 +12,4 @@ int hello()
   printf("CPU: Time taken: %f\n", end_t - start_t);
   return 0;
 }
+
