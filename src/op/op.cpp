@@ -1,15 +1,22 @@
 #include "op.h"
+#include <iostream>
+#include <fmt/format.h>
+// #include <boost/compute.hpp>
 void hello_world(void)
 {
-  printf("CPU kernal: Hello World.\n");
+  std::cout << "CPU kernal: Hello World.\n";
 }
 int hello()
 {
-  printf("CPU: Hello world!\n");
+  std::cout << "CPU: Hello world!\n";
   double start_t = cpuSecond();
   hello_world();
   double end_t = cpuSecond();
-  printf("CPU: Time taken: %f\n", end_t - start_t);
+  std::cout << fmt::format("CPU: Time taken: {}\n", end_t - start_t);
+  std::cout << "But I have openmp.\n";
+#pragma omp parallel num_threads(2)
+  {
+    hello_world();
+  }
   return 0;
 }
-

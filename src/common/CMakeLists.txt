@@ -10,8 +10,8 @@ if(NOT DISABLED_CUDA)
                CUDA_SEPARABLE_COMPILATION ON
                LINKER_LANGUAGE CUDA)
   target_include_directories(common_cu PUBLIC ${ROOT_HEADER_DIRS}
-                                          ${CMAKE_CURRENT_SOURCE_DIR})
+                                              ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 add_library(common STATIC ${common_src_files} ${common_header_files})
 target_include_directories(common PUBLIC ${ROOT_HEADER_DIRS}
-                                     ${CMAKE_CURRENT_SOURCE_DIR})
+                                         ${CMAKE_CURRENT_SOURCE_DIR})

@@ -52,14 +52,14 @@ void initialData_int(int *ip, int size)
 void printMatrix(float *C, const int nx, const int ny)
 {
   float *ic = C;
-  printf("Matrix<%d,%d>:", ny, nx);
+  std::cout<<fmt::format("Matrix<%d,%d>:", ny, nx);
   for (int i = 0; i < ny; i++)
   {
     for (int j = 0; j < nx; j++)
     {
-      printf("%6f ", C[j]);
+      std::cout<<fmt::format("%6f ", C[j]);
     }
     ic += nx;
-    printf("\n");
+    std::cout<<fmt::format("\n");
   }
 }

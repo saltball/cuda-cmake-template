@@ -1,8 +1,9 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.21)
 
 project(openacc_prj LANGUAGES CXX)
 
 option(DISABLED_CUDA "Disable CUDA" OFF)
+option(DISABLED_OPENMP "Disable openmp" OFF)
 
 set(PRJ_SRC_LIST)
 set(PRJ_HEADER_LIST)
@@ -47,15 +48,21 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_OUTPUT_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_OUTPUT_DIR}/lib)
 
 # set C and CXX flags, refer to pytorch
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_C_STANDARD 17)
 
 if(NOT MSVC)
   string(APPEND CMAKE_CXX_FLAGS " -O2 -fPIC")
   string(APPEND CMAKE_CXX_FLAGS " -Wall")
   string(APPEND CMAKE_CXX_FLAGS " -Werror")
+  if(NOT DISABLED_OPENMP)
+    string(APPEND CMAKE_CXX_FLAGS " -fopenmp")
+  endif()
 else()
   string(APPEND CMAKE_CXX_FLAGS " /O2")
+  if(NOT DISABLED_OPENMP)
+    string(APPEND CMAKE_CXX_FLAGS " /openmp")
+  endif()
   # string(APPEND CMAKE_CXX_FLAGS " /Wall")
 endif()
 
@@ -72,6 +79,12 @@ string(APPEND CMAKE_CUDA_FLAGS " -Xfatbin -compress-all")
 # set the source files
 set(ROOT_HEADER_DIRS ${PROJECT_SOURCE_DIR}/include)
 set(ROOT_SROUCE_DIRS ${PROJECT_SOURCE_DIR}/src)
+set(COMMON_LIB)
+
+# include 3rd party modules
+add_subdirectory(src/fmt EXCLUDE_FROM_ALL)
+list(APPEND ROOT_HEADER_DIRS ${ROOT_SROUCE_DIRS}/fmt/include)
+list(APPEND COMMON_LIB fmt::fmt)
 
 # set submodules
 set(QC_MODULE_NAME_LIST common op)
@@ -92,10 +105,10 @@ if(NOT DISABLED_CUDA)
 endif()
 add_executable(qc ${main_src_files} ${main_header_files})
 foreach(module ${QC_MODULE_NAME_LIST})
-  target_link_libraries(qc PUBLIC ${module})
+  target_link_libraries(qc PUBLIC ${module} ${COMMON_LIB})
   target_include_directories(qc PUBLIC ${ROOT_HEADER_DIRS})
   if(NOT DISABLED_CUDA)
-    target_link_libraries(qc_cuda PUBLIC ${module}_cu)
+    target_link_libraries(qc_cuda PUBLIC ${module}_cu ${COMMON_LIB})
     target_include_directories(qc_cuda PUBLIC ${ROOT_HEADER_DIRS})
   endif()
 endforeach()

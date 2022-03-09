@@ -1,18 +1,19 @@
 #ifndef QC_COMMON_HPP
 #define QC_COMMON_HPP
 
-#include <stdio.h>
+#include <iostream>
+#include <fmt/format.h>
 #include <math.h>
 
-#define CHECK(call)                                                    \
-  {                                                                    \
-    const cudaError_t error = call;                                    \
-    if (error != cudaSuccess)                                          \
-    {                                                                  \
-      printf("ERROR: %s:%d,", __FILE__, __LINE__);                     \
-      printf("code:%d,reason:%s\n", error, cudaGetErrorString(error)); \
-      exit(1);                                                         \
-    }                                                                  \
+#define CHECK(call)                                                                      \
+  {                                                                                      \
+    const cudaError_t error = call;                                                      \
+    if (error != cudaSuccess)                                                            \
+    {                                                                                    \
+      std::cout << fmt::format("ERROR: {}:{},", __FILE__, __LINE__);                     \
+      std::cout << fmt::format("code:{},reason:{}\n", error, cudaGetErrorString(error)); \
+      exit(1);                                                                           \
+    }                                                                                    \
   }
 
 #include <time.h>
@@ -33,4 +34,3 @@ void initDevice(int devNum);
 void checkResult(float *hostRef, float *gpuRef, const int N);
 #endif
 #endif // QC_COMMON_HPP
-

@@ -52,15 +52,15 @@ void initialData_int(int *ip, int size)
 void printMatrix(float *C, const int nx, const int ny)
 {
   float *ic = C;
-  printf("Matrix<%d,%d>:", ny, nx);
+  std::cout<<fmt::format("Matrix<{},{}>:", ny, nx);
   for (int i = 0; i < ny; i++)
   {
     for (int j = 0; j < nx; j++)
     {
-      printf("%6f ", C[j]);
+      std::cout<<fmt::format("{:6f} ", C[j]);
     }
     ic += nx;
-    printf("\n");
+    std::cout<<fmt::format("\n");
   }
 }
 #ifdef __CUDACC__
@@ -69,7 +69,7 @@ void initDevice(int devNum)
   int dev = devNum;
   cudaDeviceProp deviceProp;
   CHECK(cudaGetDeviceProperties(&deviceProp, dev));
-  printf("Using device %d: %s\n", dev, deviceProp.name);
+  std::cout<<fmt::format("Using device {}: {}\n", dev, deviceProp.name);
   CHECK(cudaSetDevice(dev));
 }
 void checkResult(float *hostRef, float *gpuRef, const int N)
@@ -79,11 +79,11 @@ void checkResult(float *hostRef, float *gpuRef, const int N)
   {
     if (fabs(hostRef[i] - gpuRef[i]) > epsilon)
     {
-      printf("Results don\'t match!\n");
-      printf("%f(hostRef[%d] )!= %f(gpuRef[%d])\n", hostRef[i], i, gpuRef[i], i);
+      std::cout<<fmt::format("Results don\'t match!\n");
+      std::cout<<fmt::format("{}(hostRef[{}] )!= {}(gpuRef[{}])\n", hostRef[i], i, gpuRef[i], i);
       return;
     }
   }
-  printf("Check result success!\n");
+  std::cout<<fmt::format("Check result success!\n");
 }
 #endif
