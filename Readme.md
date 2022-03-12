@@ -9,4 +9,5 @@
 ## 使用的包和一些技术
 
 CUDA
+
 字符串格式化：[FMT](https://fmt.dev/latest/index.html) https://fmt.dev/latest/api.html#printf-formatting

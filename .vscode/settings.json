@@ -16,6 +16,11 @@
         "xstring": "cpp",
         "xtree": "cpp",
         "xutility": "cpp",
-        "algorithm": "cpp"
-    }
+        "algorithm": "cpp",
+        "iostream": "cpp"
+    },
+    "cmake.configureSettings": {
+        "Boost_LIBRARY_DIR":"D:/CODE/boostinstall/lib",
+        "Boost_INCLUDE_DIR":"D:/CODE/boostinstall/include/boost-1_78",
+    },
 }

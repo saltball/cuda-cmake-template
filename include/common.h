@@ -27,8 +27,36 @@ int gettimeofday(struct timeval *tp, void *tzp);
 #endif
 double cpuSecond();
 void initialData(float *ip, int size);
-void initialData_int(int *ip, int size);
-void printMatrix(float *C, const int nx, const int ny);
+void initialData(int *ip, int size);
+void initialData(long *ip, int size);
+void initialData(long long *ip, int size);
+void initialData(double *ip, int size);
+void initialMatrix(long long *ip, int size_dim1, int size_dim2);
+void initialMatrix(long long *ip, int size_dim1, int size_dim2, int size_dim3);
+template <class T>
+void printVector(T *C, const int n)
+{
+  for (int i = 0; i < n; i++)
+  {
+    std::cout << C[i] << " ";
+  }
+  std::cout << "\n";
+}
+template <class T>
+void printMatrix(T *C, const int nx, const int ny)
+{
+  T *ic = C;
+  std::cout << fmt::format("Matrix<{:d},{:d}>:", ny, nx);
+  for (int i = 0; i < ny; i++)
+  {
+    for (int j = 0; j < nx; j++)
+    {
+      std::cout << fmt::format("{:6f} ", C[j]);
+    }
+    ic += nx;
+    std::cout << fmt::format("\n");
+  }
+};
 #ifdef __CUDACC__
 void initDevice(int devNum);
 void checkResult(float *hostRef, float *gpuRef, const int N);
