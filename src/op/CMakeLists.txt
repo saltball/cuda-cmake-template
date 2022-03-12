@@ -12,7 +12,11 @@ if(NOT DISABLED_CUDA)
   target_include_directories(op_cu PUBLIC ${ROOT_HEADER_DIRS}
                                           ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
+# find_package(OpenCL REQUIRED)
+find_package(Boost REQUIRED)
 add_library(op STATIC ${op_src_files} ${op_header_files})
 target_include_directories(op PUBLIC ${ROOT_HEADER_DIRS}
-                                     ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(op common)
+                                     ${CMAKE_CURRENT_SOURCE_DIR}
+                                    #  ${OpenCL_INCLUDE_DIRS}
+                                     ${Boost_INCLUDE_DIRS})
+target_link_libraries(op common ${Boost_LIBRARIES} ${OpenCL_LIBRARIES})

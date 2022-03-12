@@ -40,7 +40,16 @@ void initialData(float *ip, int size)
     ip[i] = (float)(rand() & 0xffff) / 1000.0f;
   }
 }
-void initialData_int(int *ip, int size)
+void initialData(double *ip, int size)
+{
+  time_t t;
+  srand((unsigned)time(&t));
+  for (int i = 0; i < size; i++)
+  {
+    ip[i] = (double)(rand() & 0xffff) / 1000.0;
+  }
+}
+void initialData(int *ip, int size)
 {
   time_t t;
   srand((unsigned)time(&t));
@@ -49,17 +58,41 @@ void initialData_int(int *ip, int size)
     ip[i] = int(rand() & 0xff);
   }
 }
-void printMatrix(float *C, const int nx, const int ny)
+void initialData(long *ip, int size)
 {
-  float *ic = C;
-  std::cout<<fmt::format("Matrix<%d,%d>:", ny, nx);
-  for (int i = 0; i < ny; i++)
+  time_t t;
+  srand((unsigned)time(&t));
+  for (int i = 0; i < size; i++)
   {
-    for (int j = 0; j < nx; j++)
+    ip[i] = (long)i;
+  }
+}
+
+void initialMatrix(long long *ip, int size_dim1, int size_dim2)
+{
+  time_t t;
+  srand((unsigned)time(&t));
+  for (int i = 0; i < size_dim1; i++)
+  {
+    for (int j = 0; j < size_dim2; j++)
     {
-      std::cout<<fmt::format("%6f ", C[j]);
+      ip[i * size_dim2 + j] = (long long)i + j;
     }
-    ic += nx;
-    std::cout<<fmt::format("\n");
+  }
+}
+
+void initialMatrix(long long *ip, int size_dim1, int size_dim2, int size_dim3)
+{
+  time_t t;
+  srand((unsigned)time(&t));
+  for (int i = 0; i < size_dim1; i++)
+  {
+    for (int j = 0; j < size_dim2; j++)
+    {
+      for (int k = 0; k < size_dim3; k++)
+      {
+        ip[i * size_dim2 * size_dim3 + j * size_dim3 + k] = (long long)i + j + k;
+      }
+    }
   }
 }
